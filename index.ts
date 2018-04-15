@@ -38,6 +38,8 @@ async function push_to_wordpress(article) {
   article.categories = _.compact(article.categories)
   article.tags = _.compact(article.tags)
   try {
+    // disable this while we do transition
+    /*
     response = await request.post({
       url: `${process.env.WP_URL}/wp-json/wp/v2/posts`,
       auth: {
@@ -56,6 +58,7 @@ async function push_to_wordpress(article) {
         content: new_article,
       }
     })
+    */
   } catch(error) {
     console.log('error:', error); // Print the error if one occurred
   }
