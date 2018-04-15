@@ -1,15 +1,27 @@
+import dotenv from "dotenv"
+import fs from "fs"
+import yaml from "js-yaml"
+import * as _ from "lodash"
+import logger from "loglevel-colored-level-prefix"
+import path from "path"
+import request from "request-promise-native"
+import util from "util"
+
+const log = logger()
+log.setLevel("debug")
+dotenv.config()
+
 class HugoArticle {
-  private slug: string
-  private content: string
+  public content: string = ""
+  public categories: string[] = []
+  public tags: string[] = []
+  public topics: string[] = []
+  private slug: string = ""
   private mdFilename: string
-  private categories: string[]
-  private tags: string[]
+  private yaml: any
+
   constructor(options) {
     this.mdFilename = options.filename
-    this.categories = []
-    this.tags = []
-    this.content = ""
-    this.slug = ""
   }
   public load() {
     // TODO SUPPORT MULTIPLE FILES
@@ -37,3 +49,5 @@ class HugoArticle {
     return `${process.env.HUGO_HOME}/content/` + this.mdFilename
   }
 }
+
+export default HugoArticle

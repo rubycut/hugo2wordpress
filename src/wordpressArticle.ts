@@ -1,42 +1,52 @@
 import dotenv from "dotenv"
+import yaml from "js-yaml"
 import * as _ from "lodash"
 import logger from "loglevel-colored-level-prefix"
 import path from "path"
 import request from "request-promise-native"
 import util from "util"
+import HugoArticle from "./hugoArticle"
 
 const log = logger()
 log.setLevel("debug")
 dotenv.config()
 
 class WordpressArticle {
-  private categories: string[]
-  public push() {
-    const categories = await get_categories()
+  public hugoArticle: HugoArticle
+  public categories: string[] = []
+  public tags: string[] = []
+  public topics: string[] = []
+
+  constructor(options) {
+    this.hugoArticle = options.hugoArticle
+  }
+
+  public async push() {
+    const categories = await this.get_categories()
     log.trace(util.inspect(categories, { colors: true }))
 
-    article.categories = await article_categories(article, categories)
+    this.categories = await this.article_categories(categories)
 
-    if (article.tags && article.tags.length > 0) {
-      article.tags = await article_tags(article)
+    if (this.hugoArticle.tags && this.hugoArticle.tags.length > 0) {
+      this.tags = await this.article_tags()
     }
-    if (article.topics && article.topics.length > 0) {
-      const topics = await article_topics(article, categories)
-      article.categories = _.union(article.categories, topics)
+    if (this.hugoArticle.topics && this.hugoArticle.topics.length > 0) {
+      const topics = await this.article_topics(categories)
+      this.categories = _.union(this.hugoArticle.categories, topics)
     }
   }
   public async push_to_wordpress() {
-    const response
-    const newArticle = this.content.replace(
+    const newArticle = this.hugoArticle.content.replace(
       /{{< youtube id="(.+)" >}}/g,
       "https://www.youtube.com/watch?v=$1",
     )
     this.categories = _.compact(this.categories)
-    this.tags = _.compact(this.tags)
+    this.tags = _.compact(this.hugoArticle.tags)
+    log.info("Pushing wordpress:", this)
     try {
       // disable this while we do transition
       /*
-    response = await request.post({
+    const response = await request.post({
       url: `${process.env.WP_URL}/wp-json/wp/v2/posts`,
       auth: {
         user: process.env.WP_USERNAME,
@@ -111,30 +121,30 @@ class WordpressArticle {
     return _.union(tags1, tags2)
   }
 
-  private async article_categories(article, categories) {
-    if (article.categories && article.categories.length > 0) {
+  private async article_categories(categories) {
+    if (this.hugoArticle.categories && this.hugoArticle.categories.length > 0) {
       log.trace("continuing")
     } else {
       log.trace("returning empty")
       return []
     }
 
-    const promises = article.categories.map(async (category) => {
+    const promises = this.hugoArticle.categories.map(async (category) => {
       log.debug("SEARCHING category", category)
       let hit = _.find(categories, { name: category })
       if (!hit) {
         log.error(`${category} not found, creating...`)
-        hit = await create_category(category)
+        hit = await this.create_category(category)
       }
       log.debug(hit.id)
       return hit.id
     })
     return Promise.all(promises)
   }
-  private async article_tags(article) {
-    const tags = await get_tags()
+  private async article_tags() {
+    const tags = await this.get_tags()
     // console.log("ARTICLE TAGS", article.tags)
-    const promises = article.tags.map(async (tag) => {
+    const promises = this.hugoArticle.tags.map(async (tag) => {
       log.debug("SEARCHING for tag: ", util.inspect(tag, { colors: true }))
       let hit = _.find(tags, { name: tag })
       if (!hit) {
@@ -155,7 +165,7 @@ class WordpressArticle {
           hit = response[0]
         } else {
           log.error(`${tag} not found, creating...`, response)
-          hit = await create_tag(tag)
+          hit = await this.create_tag(tag)
         }
       }
       log.trace(hit.id)
@@ -163,18 +173,65 @@ class WordpressArticle {
     })
     return Promise.all(promises)
   }
-  private async article_topics(article, categories) {
-    const promises = article.topics.map(async (topic) => {
+  private async article_topics(categories) {
+    const promises = this.hugoArticle.topics.map(async (topic) => {
       log.debug("SEARCHING for topic: ", topic)
       let hit = _.find(categories, { name: topic })
       if (!hit) {
         log.trace(categories)
         log.error(`${topic} not found, creating...`)
-        hit = await create_category(topic)
+        hit = await this.create_category(topic)
       }
       log.trace(hit.id)
       return hit.id
     })
     return Promise.all(promises)
   }
+
+  private async create_tag(tagName) {
+    log.info("Creating tag: ", tagName)
+    let response
+    try {
+      response = await request.post({
+        url: `${process.env.WP_URL}/wp-json/wp/v2/tags`,
+        auth: {
+          user: process.env.WP_USERNAME,
+          password: process.env.WP_PASSWORD,
+        },
+        json: true,
+        body: {
+          name: tagName,
+        },
+      })
+    } catch (error) {
+      log.error("error while creating: ", tagName)
+      log.error(error.message) // Print the error if one occurred
+    }
+    log.info("Created tag: ", tagName)
+    log.debug("Response: ", response)
+    return response
+  }
+  private async create_category(categoryName) {
+    log.info("Creating category: ", categoryName)
+    let response
+    try {
+      response = await request.post({
+        url: `${process.env.WP_URL}/wp-json/wp/v2/categories`,
+        auth: {
+          user: process.env.WP_USERNAME,
+          password: process.env.WP_PASSWORD,
+        },
+        json: true,
+        body: {
+          name: categoryName,
+        },
+      })
+    } catch (error) {
+      log.error(error) // Print the error if one occurred
+    }
+    log.info("Created category: ", categoryName)
+    return response
+  }
 }
+
+export default WordpressArticle
