@@ -12,16 +12,14 @@ log.setLevel("debug")
 dotenv.config()
 
 async function main(): Promise<any> {
-
   try {
-    const hugoArticle = new HugoArticle({filename: process.argv[2]})
+    const hugoArticle = new HugoArticle({ filename: process.argv[2] })
     hugoArticle.load()
     const wordpressArticle = new WordpressArticle(hugoArticle)
-    wordpressArticle.push();
+    wordpressArticle.push()
   } catch (err) {
     log.error(err)
   }
-
 }
 
 async function create_tag(tagName) {
@@ -33,7 +31,6 @@ async function create_tag(tagName) {
       auth: {
         user: process.env.WP_USERNAME,
         password: process.env.WP_PASSWORD,
-
       },
       json: true,
       body: {
@@ -42,7 +39,7 @@ async function create_tag(tagName) {
     })
   } catch (error) {
     log.error("error while creating: ", tagName)
-    log.error(error.message); // Print the error if one occurred
+    log.error(error.message) // Print the error if one occurred
   }
   log.info("Created tag: ", tagName)
   log.debug("Response: ", response)
@@ -57,7 +54,6 @@ async function create_category(categoryName) {
       auth: {
         user: process.env.WP_USERNAME,
         password: process.env.WP_PASSWORD,
-
       },
       json: true,
       body: {
@@ -65,7 +61,7 @@ async function create_category(categoryName) {
       },
     })
   } catch (error) {
-    log.error(error); // Print the error if one occurred
+    log.error(error) // Print the error if one occurred
   }
   log.info("Created category: ", categoryName)
   return response
