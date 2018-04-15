@@ -1,6 +1,6 @@
-yaml = require('js-yaml');
-fs   = require('fs');
-request = require('request-promise-native');
+const yaml = require('js-yaml');
+const fs   = require('fs');
+const request = require('request-promise-native');
 const path = require('path');
 const util = require('util');
 const _ = require("lodash");

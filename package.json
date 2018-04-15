@@ -15,5 +15,7 @@
     "request-promise-native": "^1.0.5",
     "ts-node": "^5.0.1"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/node": "^9.6.5"
+  }
 }
