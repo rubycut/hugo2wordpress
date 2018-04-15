@@ -148,6 +148,7 @@ class WordpressArticle {
       if (hit === undefined) {
         log.error(`${category} not found, creating...`)
         hit = await this.create_category(category)
+        return hit.id
       } else {
         log.debug(hit.id)
         return hit.id
