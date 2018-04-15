@@ -14,13 +14,18 @@ dotenv.config()
 interface IHugoArticleOptions {
   filename: string
 }
+
+interface IHugoArticleYaml {
+  title: string
+  categories?: string[]
+  tags?: string[]
+  topics?: string[]
+  date: Date
+}
 class HugoArticle {
   public content: string = ""
-  public categories: string[] = []
-  public tags: string[] = []
-  public topics: string[] = []
   public slug: string = ""
-  public yaml: any
+  public yaml: IHugoArticleYaml = { title: "", date: new Date() }
   private mdFilename: string
 
   constructor(options: IHugoArticleOptions) {

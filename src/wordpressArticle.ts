@@ -40,10 +40,10 @@ class WordpressArticle {
 
     this.categories = await this.article_categories()
 
-    if (this.hugoArticle.tags && this.hugoArticle.tags.length > 0) {
+    if (this.hugoArticle.yaml.tags && this.hugoArticle.yaml.tags.length > 0) {
       this.tags = await this.article_tags()
     }
-    if (this.hugoArticle.topics && this.hugoArticle.topics.length > 0) {
+    if (this.hugoArticle.yaml.topics && this.hugoArticle.yaml.topics.length > 0) {
       const topics = await this.article_topics()
       this.categories = _.union(this.categories, topics)
     }
@@ -134,14 +134,14 @@ class WordpressArticle {
   }
 
   private async article_categories(): Promise<number[]> {
-    if (this.hugoArticle.categories && this.hugoArticle.categories.length > 0) {
+    if (this.hugoArticle.yaml.categories && this.hugoArticle.yaml.categories.length > 0) {
       log.trace("continuing")
     } else {
       log.trace("returning empty")
       return []
     }
 
-    const promises = this.hugoArticle.categories.map(async (category) => {
+    const promises = this.hugoArticle.yaml.categories.map(async (category) => {
       log.debug("SEARCHING category", category)
       let hit = _.find(this.allCategories, { name: category })
       if (hit === undefined) {
@@ -158,7 +158,10 @@ class WordpressArticle {
   private async article_tags(): Promise<number[]> {
     const tags = await this.get_tags()
     // console.log("ARTICLE TAGS", article.tags)
-    const promises = this.hugoArticle.tags.map(async (tag) => {
+    if (this.hugoArticle.yaml.tags === undefined) {
+      return []
+    }
+    const promises = this.hugoArticle.yaml.tags.map(async (tag) => {
       log.debug("SEARCHING for tag: ", util.inspect(tag, { colors: true }))
       const hit = _.find(tags, { name: tag })
       if (hit !== undefined) {
@@ -192,7 +195,11 @@ class WordpressArticle {
     return Promise.all(promises)
   }
   private async article_topics(): Promise<number[]> {
-    const promises = this.hugoArticle.topics.map(async (topic) => {
+    if (this.hugoArticle.yaml.topics === undefined) {
+      return []
+    }
+
+    const promises = this.hugoArticle.yaml.topics.map(async (topic) => {
       log.debug("SEARCHING for topic: ", topic)
       let hit = _.find(this.allCategories, { name: topic })
       if (!hit) {
