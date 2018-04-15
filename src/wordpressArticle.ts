@@ -15,6 +15,10 @@ interface IWordpressArticleOption {
   hugoArticle: HugoArticle
 }
 
+interface IWordpressCategor {
+  id: string
+}
+
 class WordpressArticle {
   public hugoArticle: HugoArticle
   public categories: string[] = []
@@ -94,7 +98,7 @@ class WordpressArticle {
     return categories
   }
 
-  private async get_tags() {
+  private async get_tags(): Promise<string[]> {
     let response
     try {
       response = await request.get({
@@ -136,12 +140,13 @@ class WordpressArticle {
     const promises = this.hugoArticle.categories.map(async (category) => {
       log.debug("SEARCHING category", category)
       let hit = _.find(categories, { name: category })
-      if (!hit) {
+      if (hit === undefined) {
         log.error(`${category} not found, creating...`)
         hit = await this.create_category(category)
+      } else {
+        log.debug(hit.id)
+        return hit.id
       }
-      log.debug(hit.id)
-      return hit.id
     })
     return Promise.all(promises)
   }
@@ -215,7 +220,7 @@ class WordpressArticle {
     log.debug("Response: ", response)
     return response
   }
-  private async create_category(categoryName: string) {
+  private async create_category(categoryName: string): Promise<IWordpressCategory> {
     log.info("Creating category: ", categoryName)
     let response
     try {
