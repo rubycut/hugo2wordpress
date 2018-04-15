@@ -1,3 +1,4 @@
+import dotenv from "dotenv"
 import fs from "fs"
 import yaml from "js-yaml"
 import * as _ from "lodash"
@@ -8,7 +9,7 @@ import util from "util"
 
 const log = logger()
 log.setLevel("debug")
-require("dotenv").config();
+dotenv.config()
 
 function fetch_article() {
   // TODO SUPPORT MULTIPLE FILES
@@ -35,10 +36,8 @@ function fetch_article() {
 }
 
 async function push_to_wordpress(article) {
-  let response
-  let new_article
-
-  new_article = article.content.replace(/{{< youtube id="(.+)" >}}/g, "https://www.youtube.com/watch?v=$1")
+  const response
+  const newArticle = article.content.replace(/{{< youtube id="(.+)" >}}/g, "https://www.youtube.com/watch?v=$1")
   article.categories = _.compact(article.categories)
   article.tags = _.compact(article.tags)
   try {
@@ -59,7 +58,7 @@ async function push_to_wordpress(article) {
         tags: article.tags,
 
         // TODO keep image names
-        content: new_article,
+        content: newArticle,
       }
     })
     */
@@ -198,7 +197,7 @@ async function main(): Promise<any> {
       article.categories = ["article"]
     }
     const categories = await get_categories()
-    console.log(util.inspect(categories, { colors: true }))
+    log.debug(util.inspect(categories, { colors: true }))
 
     article.categories = await article_categories(article, categories)
 
@@ -215,8 +214,8 @@ async function main(): Promise<any> {
   push_to_wordpress(article)
 }
 
-async function create_tag(tag_name) {
-  log.info("Creating tag: ", tag_name)
+async function create_tag(tagName) {
+  log.info("Creating tag: ", tagName)
   let response
   try {
     response = await request.post({
@@ -228,19 +227,19 @@ async function create_tag(tag_name) {
       },
       json: true,
       body: {
-        name: tag_name,
+        name: tagName,
       },
     })
   } catch (error) {
-    log.error("error while creating: ", tag_name)
+    log.error("error while creating: ", tagName)
     log.error(error.message); // Print the error if one occurred
   }
-  log.info("Created tag: ", tag_name)
+  log.info("Created tag: ", tagName)
   log.debug("Response: ", response)
   return response
 }
-async function create_category(category_name) {
-  log.info("Creating category: ", category_name)
+async function create_category(categoryName) {
+  log.info("Creating category: ", categoryName)
   let response
   try {
     response = await request.post({
@@ -252,13 +251,13 @@ async function create_category(category_name) {
       },
       json: true,
       body: {
-        name: category_name,
+        name: categoryName,
       },
     })
   } catch (error) {
     log.error(error); // Print the error if one occurred
   }
-  log.info("Created category: ", category_name)
+  log.info("Created category: ", categoryName)
   return response
 }
 
