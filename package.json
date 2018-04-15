@@ -13,9 +13,11 @@
     "lodash": "^4.17.4",
     "request": "^2.83.0",
     "request-promise-native": "^1.0.5",
-    "ts-node": "^5.0.1"
+    "ts-node": "^5.0.1",
+    "typescript": "^2.8.1"
   },
   "devDependencies": {
-    "@types/node": "^9.6.5"
+    "@types/node": "^9.6.5",
+    "tslint": "^5.9.1"
   }
 }

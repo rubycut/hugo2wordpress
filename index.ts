@@ -17,7 +17,7 @@ function fetch_article() {
   try {
     article = yaml.safeLoad(my_yaml);
     article.slug = path.basename(filename).split(".")[0];
-    text = file.split("---")
+    var text = file.split("---")
     // remove first empty member
     text.shift()
     // remove yaml
@@ -34,6 +34,7 @@ function fetch_article() {
 async function push_to_wordpress(article) {
   let response
   let new_article
+
   new_article = article.content.replace(/{{< youtube id="(.+)" >}}/g,'https://www.youtube.com/watch?v=$1')
   article.categories = _.compact(article.categories)
   article.tags = _.compact(article.tags)
@@ -78,6 +79,7 @@ async function get_categories() {
   } catch(error) {
     console.log('error:', error); // Print the error if one occurred
   }
+  
   let categories = yaml.safeLoad(response)
   //console.log(util.inspect(categories, { colors:true }))
   return categories
@@ -122,8 +124,8 @@ async function article_categories(article, categories) {
     console.log("returning empty")
     return []
   }
-
-  promises = article.categories.map(async (category) => {
+ 
+  const promises = article.categories.map(async (category) => {
     console.log("SEARCHING category", category)
     var hit = _.find(categories, {name: category})
     if (! hit ) {
@@ -138,7 +140,7 @@ async function article_categories(article, categories) {
 async function article_tags(article) {
   var tags = await get_tags()
   //console.log("ARTICLE TAGS", article.tags)
-  promises = article.tags.map(async (tag) => {
+  const promises = article.tags.map(async (tag) => {
     console.log("SEARCHING for tag: ", util.inspect(tag, { colors:true }))
     var hit = _.find(tags, {name: tag})
     if (! hit ) {
@@ -171,19 +173,6 @@ async function article_tags(article) {
   })
   return Promise.all(promises)
 }
-async function article_gurus(article,categories) {
-  let promises = article.gurus.map(async (guru) => {
-    console.log("SEARCHING for guru: ", guru)
-    var hit = _.find(categories, {name: guru})
-    if (! hit ) {
-      console.error(`${guru} not found, creating...`)
-      hit = await create_category(guru)
-    }
-    console.log(hit.id)
-    return hit.id
-  })
-  return Promise.all(promises)
-}
 async function article_topics(article,categories) {
   let promises = article.topics.map(async (topic) => {
     console.log("SEARCHING for topic: ", topic)
@@ -199,8 +188,7 @@ async function article_topics(article,categories) {
   return Promise.all(promises)
 }
 
-
-async function main() {
+async function main(): Promise<any> {
   console.log("GO")
   let article
   try {
@@ -215,10 +203,6 @@ async function main() {
 
     if (article.tags && article.tags.length > 0) {
       article.tags = await article_tags(article)
-    }
-    if (article.gurus && article.gurus.length > 0) {
-      var gurus = await article_gurus(article, categories)
-      article.categories = _.union(article.categories, gurus)
     }
     if (article.topics && article.topics.length > 0) {
       var topics = await article_topics(article, categories)
