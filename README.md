@@ -12,7 +12,7 @@ This is just initial release, pull requests welcome.
 
 # Getting started
 
-Install: ```npm install -g hugo2wordpress
+Install: ```npm install -g hugo2wordpress```
 ## Configure 
 
 Create .env file in your current dir:
@@ -25,4 +25,4 @@ HUGO_HOME=/Users/user/projects/web/yourwebsite.com
 
 # Run to convert article
 
-node index.js <article>.md
+```node index.js <article>.md```
