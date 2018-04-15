@@ -18,7 +18,7 @@ async function main(): Promise<any> {
   try {
     const hugoArticle = new HugoArticle({ filename: process.argv[2] })
     hugoArticle.load()
-    const wordpressArticle = new WordpressArticle(hugoArticle)
+    const wordpressArticle = new WordpressArticle({ hugoArticle })
     wordpressArticle.push()
   } catch (err) {
     log.error(err)

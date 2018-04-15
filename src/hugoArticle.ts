@@ -11,6 +11,9 @@ const log = logger()
 log.setLevel("debug")
 dotenv.config()
 
+interface IHugoArticleOptions {
+  filename: string
+}
 class HugoArticle {
   public content: string = ""
   public categories: string[] = []
@@ -20,7 +23,7 @@ class HugoArticle {
   private mdFilename: string
   private yaml: any
 
-  constructor(options) {
+  constructor(options: IHugoArticleOptions) {
     this.mdFilename = options.filename
   }
   public load() {

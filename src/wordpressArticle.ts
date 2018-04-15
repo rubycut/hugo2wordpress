@@ -11,13 +11,17 @@ const log = logger()
 log.setLevel("debug")
 dotenv.config()
 
+interface IWordpressArticleOption {
+  hugoArticle: HugoArticle
+}
+
 class WordpressArticle {
   public hugoArticle: HugoArticle
   public categories: string[] = []
   public tags: string[] = []
   public topics: string[] = []
 
-  constructor(options) {
+  constructor(options: IWordpressArticleOption) {
     this.hugoArticle = options.hugoArticle
   }
 
@@ -121,7 +125,7 @@ class WordpressArticle {
     return _.union(tags1, tags2)
   }
 
-  private async article_categories(categories) {
+  private async article_categories(categories: string[]) {
     if (this.hugoArticle.categories && this.hugoArticle.categories.length > 0) {
       log.trace("continuing")
     } else {
@@ -173,7 +177,7 @@ class WordpressArticle {
     })
     return Promise.all(promises)
   }
-  private async article_topics(categories) {
+  private async article_topics(categories: string[]) {
     const promises = this.hugoArticle.topics.map(async (topic) => {
       log.debug("SEARCHING for topic: ", topic)
       let hit = _.find(categories, { name: topic })
@@ -188,7 +192,7 @@ class WordpressArticle {
     return Promise.all(promises)
   }
 
-  private async create_tag(tagName) {
+  private async create_tag(tagName: string) {
     log.info("Creating tag: ", tagName)
     let response
     try {
@@ -211,7 +215,7 @@ class WordpressArticle {
     log.debug("Response: ", response)
     return response
   }
-  private async create_category(categoryName) {
+  private async create_category(categoryName: string) {
     log.info("Creating category: ", categoryName)
     let response
     try {
