@@ -17,9 +17,12 @@ Install: ```npm install -g hugo2wordpress```
 
 Create .env file in your current dir:
 
+```
+# .env
 WP_URL=https://yourwebsite.com
 WP_USERNAME=youremail@gmail.com
 WP_PASSWORD=YOUR PASSWORD
+```
 
 HUGO_HOME=/Users/user/projects/web/yourwebsite.com
 
