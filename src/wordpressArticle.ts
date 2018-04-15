@@ -195,9 +195,7 @@ class WordpressArticle {
     return Promise.all(promises)
   }
   private async article_topics(): Promise<number[]> {
-    if (this.hugoArticle.yaml.topics === undefined) {
-      return []
-    }
+    if (!this.hugoArticle.yaml.topics) return []
 
     const promises = this.hugoArticle.yaml.topics.map(async (topic) => {
       log.debug("SEARCHING for topic: ", topic)
