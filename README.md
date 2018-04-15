@@ -29,3 +29,11 @@ HUGO_HOME=/Users/user/projects/web/yourwebsite.com
 # Run to convert article
 
 ```node index.js <article>.md```
+
+
+# Development
+
+```
+yarn install 
+ts-node index.ts <MY_ARTICLE>.md
+```
