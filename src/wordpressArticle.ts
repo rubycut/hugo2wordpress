@@ -15,13 +15,19 @@ interface IWordpressArticleOption {
   hugoArticle: HugoArticle
 }
 
-interface IWordpressCategor {
-  id: string
+interface IWordpressCategory {
+  name: string
+  id: number
+}
+interface IWordpressTag {
+  name: string
+  id: number
 }
 
 class WordpressArticle {
   public hugoArticle: HugoArticle
-  public categories: string[] = []
+  public allCategories: IWordpressCategory[] = []
+  public categories: number[] = []
   public tags: string[] = []
   public topics: string[] = []
 
@@ -30,17 +36,17 @@ class WordpressArticle {
   }
 
   public async push() {
-    const categories = await this.get_categories()
-    log.trace(util.inspect(categories, { colors: true }))
+    this.allCategories = await this.get_categories()
+    log.trace(util.inspect(this.categories, { colors: true }))
 
-    this.categories = await this.article_categories(categories)
+    this.categories = await this.article_categories()
 
     if (this.hugoArticle.tags && this.hugoArticle.tags.length > 0) {
       this.tags = await this.article_tags()
     }
     if (this.hugoArticle.topics && this.hugoArticle.topics.length > 0) {
-      const topics = await this.article_topics(categories)
-      this.categories = _.union(this.hugoArticle.categories, topics)
+      const topics = await this.article_topics()
+      this.categories = _.union(this.categories, topics)
     }
   }
   public async push_to_wordpress() {
@@ -78,7 +84,7 @@ class WordpressArticle {
     }
   }
 
-  private async get_categories() {
+  private async get_categories(): Promise<IWordpressCategory[]> {
     log.debug("Let's get wordpress categories")
     let response
     try {
@@ -98,7 +104,7 @@ class WordpressArticle {
     return categories
   }
 
-  private async get_tags(): Promise<string[]> {
+  private async get_tags(): Promise<IWordpressTag[]> {
     let response
     try {
       response = await request.get({
@@ -129,7 +135,7 @@ class WordpressArticle {
     return _.union(tags1, tags2)
   }
 
-  private async article_categories(categories: string[]) {
+  private async article_categories(): Promise<number[]> {
     if (this.hugoArticle.categories && this.hugoArticle.categories.length > 0) {
       log.trace("continuing")
     } else {
@@ -139,7 +145,7 @@ class WordpressArticle {
 
     const promises = this.hugoArticle.categories.map(async (category) => {
       log.debug("SEARCHING category", category)
-      let hit = _.find(categories, { name: category })
+      let hit = _.find(this.allCategories, { name: category })
       if (hit === undefined) {
         log.error(`${category} not found, creating...`)
         hit = await this.create_category(category)
@@ -150,13 +156,16 @@ class WordpressArticle {
     })
     return Promise.all(promises)
   }
-  private async article_tags() {
+  private async article_tags(): Promise<number[]> {
     const tags = await this.get_tags()
     // console.log("ARTICLE TAGS", article.tags)
     const promises = this.hugoArticle.tags.map(async (tag) => {
       log.debug("SEARCHING for tag: ", util.inspect(tag, { colors: true }))
-      let hit = _.find(tags, { name: tag })
-      if (!hit) {
+      const hit = _.find(tags, { name: tag })
+      if (hit !== undefined) {
+        log.warn("Tag not found: ", tag)
+        return hit.id
+      } else {
         let response
         try {
           response = await request.get({
@@ -170,24 +179,25 @@ class WordpressArticle {
         } catch (error) {
           log.error("error:", error) // Print the error if one occurred
         }
+        let hit2
         if (response && response.length > 1 && response[0].name === tag) {
-          hit = response[0]
+          hit2 = response[0]
         } else {
           log.error(`${tag} not found, creating...`, response)
-          hit = await this.create_tag(tag)
+          hit2 = await this.create_tag(tag)
         }
+        log.trace(hit2.id)
+        return hit2.id
       }
-      log.trace(hit.id)
-      return hit.id
     })
     return Promise.all(promises)
   }
-  private async article_topics(categories: string[]) {
+  private async article_topics(): Promise<number[]> {
     const promises = this.hugoArticle.topics.map(async (topic) => {
       log.debug("SEARCHING for topic: ", topic)
-      let hit = _.find(categories, { name: topic })
+      let hit = _.find(this.allCategories, { name: topic })
       if (!hit) {
-        log.trace(categories)
+        log.trace(this.allCategories)
         log.error(`${topic} not found, creating...`)
         hit = await this.create_category(topic)
       }
@@ -197,7 +207,7 @@ class WordpressArticle {
     return Promise.all(promises)
   }
 
-  private async create_tag(tagName: string) {
+  private async create_tag(tagName: string): Promise<IWordpressTag> {
     log.info("Creating tag: ", tagName)
     let response
     try {
