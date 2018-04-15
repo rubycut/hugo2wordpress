@@ -28,8 +28,7 @@ class WordpressArticle {
   public hugoArticle: HugoArticle
   public allCategories: IWordpressCategory[] = []
   public categories: number[] = []
-  public tags: string[] = []
-  public topics: string[] = []
+  public tags: number[] = []
 
   constructor(options: IWordpressArticleOption) {
     this.hugoArticle = options.hugoArticle
@@ -55,7 +54,7 @@ class WordpressArticle {
       "https://www.youtube.com/watch?v=$1",
     )
     this.categories = _.compact(this.categories)
-    this.tags = _.compact(this.hugoArticle.tags)
+    this.tags = _.compact(this.tags)
     log.info("Pushing wordpress:", this)
     try {
       // disable this while we do transition
