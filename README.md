@@ -1,6 +1,6 @@
 # Introduction
 
-I decided to move my website from hugo to wordpress. Converting 300 articles manually was not much fun, I didn't find any tool which would be able to do . So, I wrote my own.
+I decided to move my website from hugo to wordpress. Converting 300 articles manually was not much fun, I didn't find any tool which would be able to do . So, I write my own.
 
 Enter hugo2wordpress
 
