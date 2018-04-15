@@ -1,13 +1,13 @@
 import dotenv from "dotenv"
 import yaml from "js-yaml"
 import * as _ from "lodash"
-import logger from "loglevel-colored-level-prefix"
+import getLogger from "loglevel-colored-level-prefix"
 import path from "path"
 import request from "request-promise-native"
 import util from "util"
 import HugoArticle from "./hugoArticle"
 
-const log = logger()
+const log = getLogger()
 log.setLevel("debug")
 dotenv.config()
 
@@ -43,11 +43,17 @@ class WordpressArticle {
     if (this.hugoArticle.yaml.tags && this.hugoArticle.yaml.tags.length > 0) {
       this.tags = await this.article_tags()
     }
-    if (this.hugoArticle.yaml.topics && this.hugoArticle.yaml.topics.length > 0) {
-      const topics = await this.article_topics()
-      this.categories = _.union(this.categories, topics)
-    }
-
+    log.setLevel("debug")
+    log.debug("CHECK THIS", process.env.HUGO_CUSTOM_TAXONOMIES)
+    const promises = _.get(process.env, "HUGO_CUSTOM_TAXONOMIES", "")
+      .split(",")
+      .map(async (taxonomy) => {
+        log.debug("Checking custom taxonomy:", taxonomy)
+        if (this.hugoArticle.yaml[taxonomy] && this.hugoArticle.yaml[taxonomy].length > 0) {
+          const topics = await this.addCustomTaxonomy(taxonomy)
+        }
+      })
+    await Promise.all(promises)
     this.hugoArticle.content = this.hugoArticle.content.replace(
       /{{< youtube id="(.+)" >}}/g,
       "https://www.youtube.com/watch?v=$1",
@@ -165,7 +171,7 @@ class WordpressArticle {
       log.debug("SEARCHING for tag: ", util.inspect(tag, { colors: true }))
       const hit = _.find(tags, { name: tag })
       if (hit !== undefined) {
-        log.warn("Tag not found: ", tag)
+        log.warn("Tag found: ", tag, hit)
         return hit.id
       } else {
         let response
@@ -194,21 +200,24 @@ class WordpressArticle {
     })
     return Promise.all(promises)
   }
-  private async article_topics(): Promise<number[]> {
-    if (!this.hugoArticle.yaml.topics) return []
+  private async addCustomTaxonomy(taxonomy: string) {
+    if (!this.hugoArticle.yaml[taxonomy]) return []
 
-    const promises = this.hugoArticle.yaml.topics.map(async (topic) => {
-      log.debug("SEARCHING for topic: ", topic)
-      let hit = _.find(this.allCategories, { name: topic })
+    const promises: number[] = this.hugoArticle.yaml[taxonomy].map(async (term: string): Promise<
+      number
+    > => {
+      log.debug(`SEARCHING for ${taxonomy}: `, term)
+      let hit = _.find(this.allCategories, { name: term })
       if (!hit) {
         log.trace(this.allCategories)
-        log.error(`${topic} not found, creating...`)
-        hit = await this.create_category(topic)
+        log.error(`${term} not found, creating...`)
+        hit = await this.create_category(term)
       }
       log.trace(hit.id)
       return hit.id
     })
-    return Promise.all(promises)
+    const customCategories = await Promise.all(promises)
+    this.categories = _.union(this.categories, customCategories)
   }
 
   private async create_tag(tagName: string): Promise<IWordpressTag> {
