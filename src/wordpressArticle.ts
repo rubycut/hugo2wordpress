@@ -47,15 +47,23 @@ class WordpressArticle {
       const topics = await this.article_topics()
       this.categories = _.union(this.categories, topics)
     }
-  }
-  public async push_to_wordpress() {
-    const newArticle = this.hugoArticle.content.replace(
+
+    this.hugoArticle.content = this.hugoArticle.content.replace(
       /{{< youtube id="(.+)" >}}/g,
       "https://www.youtube.com/watch?v=$1",
     )
     this.categories = _.compact(this.categories)
     this.tags = _.compact(this.tags)
-    log.info("Pushing wordpress:", this)
+    const body = {
+      title: this.hugoArticle.yaml.title,
+      slug: this.hugoArticle.slug,
+      date: this.hugoArticle.yaml.date,
+      categories: this.categories,
+      tags: this.tags,
+      // TODO keep image names
+      content: this.hugoArticle.content,
+    }
+    log.error("Pushing wordpress:", body)
     try {
       // disable this while we do transition
       /*
@@ -66,16 +74,7 @@ class WordpressArticle {
         password: process.env.WP_PASSWORD
       },
       json: true,
-      body: {
-        title: article.title,
-        slug: article.slug,
-        date: article.date,
-        categories: article.categories,
-        tags: article.tags,
-
-        // TODO keep image names
-        content: newArticle,
-      }
+      body
     })
     */
     } catch (error) {

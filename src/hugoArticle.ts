@@ -19,9 +19,9 @@ class HugoArticle {
   public categories: string[] = []
   public tags: string[] = []
   public topics: string[] = []
-  private slug: string = ""
+  public slug: string = ""
+  public yaml: any
   private mdFilename: string
-  private yaml: any
 
   constructor(options: IHugoArticleOptions) {
     this.mdFilename = options.filename
