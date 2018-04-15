@@ -8,7 +8,7 @@ It took me an hour or two to write this utility, which will load my hugo article
 
 # Status
 
-This is just initial release, pull requests welcome. 
+This is just initial release, not ready for use yet. 
 
 # Getting started
 
