@@ -1,0 +1,18 @@
+{
+  "name": "hugo2wordpress",
+  "version": "0.0.1",
+  "main": "index.js",
+  "author": "Hrvoje Marjanovic",
+  "contributors": [
+    "Hrvoje Marjanovic"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^5.0.1",
+    "js-yaml": "^3.10.0",
+    "lodash": "^4.17.4",
+    "request": "^2.83.0",
+    "request-promise-native": "^1.0.5"
+  },
+  "devDependencies": {}
+}
