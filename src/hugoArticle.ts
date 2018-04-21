@@ -2,13 +2,10 @@ import dotenv from "dotenv"
 import fs from "fs"
 import yaml from "js-yaml"
 import * as _ from "lodash"
-import logger from "loglevel-colored-level-prefix"
 import path from "path"
 import request from "request-promise-native"
 import util from "util"
 
-const log = logger()
-log.setLevel("debug")
 dotenv.config()
 
 interface IHugoArticleOptions {
@@ -34,6 +31,7 @@ class HugoArticle {
   public load() {
     // TODO SUPPORT MULTIPLE FILES
     const filename = this.filename()
+    log.debug("Loading hugo article", filename)
     // Get document, or throw exception on error
     const file = fs.readFileSync(filename, "utf8")
     const myYaml = file.split("---")[1]

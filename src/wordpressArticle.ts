@@ -1,14 +1,11 @@
 import dotenv from "dotenv"
 import yaml from "js-yaml"
 import * as _ from "lodash"
-import getLogger from "loglevel-colored-level-prefix"
 import path from "path"
 import request from "request-promise-native"
 import util from "util"
 import HugoArticle from "./hugoArticle"
 
-const log = getLogger()
-log.setLevel("debug")
 dotenv.config()
 
 interface IWordpressArticleOption {
@@ -43,7 +40,6 @@ class WordpressArticle {
     if (this.hugoArticle.yaml.tags && this.hugoArticle.yaml.tags.length > 0) {
       this.tags = await this.article_tags()
     }
-    log.setLevel("debug")
     log.debug("CHECK THIS", process.env.HUGO_CUSTOM_TAXONOMIES)
     const promises = _.get(process.env, "HUGO_CUSTOM_TAXONOMIES", "")
       .split(",")
