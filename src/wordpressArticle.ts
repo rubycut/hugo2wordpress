@@ -10,6 +10,7 @@ dotenv.config()
 
 interface IWordpressArticleOption {
   hugoArticle: HugoArticle
+  live?: boolean
 }
 
 interface IWordpressCategory {
@@ -26,14 +27,16 @@ class WordpressArticle {
   public allCategories: IWordpressCategory[] = []
   public categories: number[] = []
   public tags: number[] = []
+  public options: IWordpressArticleOption
 
   constructor(options: IWordpressArticleOption) {
     this.hugoArticle = options.hugoArticle
+    this.options = options
   }
 
   public async push() {
     this.allCategories = await this.get_categories()
-    log.trace(util.inspect(this.categories, { colors: true }))
+    log.debug(util.inspect(this.categories, { colors: true }))
 
     this.categories = await this.article_categories()
 
@@ -65,20 +68,20 @@ class WordpressArticle {
       // TODO keep image names
       content: this.hugoArticle.content,
     }
-    log.error("Pushing wordpress:", body)
+
     try {
-      // disable this while we do transition
-      /*
-    const response = await request.post({
-      url: `${process.env.WP_URL}/wp-json/wp/v2/posts`,
-      auth: {
-        user: process.env.WP_USERNAME,
-        password: process.env.WP_PASSWORD
-      },
-      json: true,
-      body
-    })
-    */
+      if (this.options.live) {
+        log.info("Pushing wordpress:", body)
+        const response = await request.post({
+          url: `${process.env.WP_URL}/wp-json/wp/v2/posts`,
+          auth: {
+            user: process.env.WP_USERNAME,
+            password: process.env.WP_PASSWORD,
+          },
+          json: true,
+          body,
+        })
+      }
     } catch (error) {
       log.error("error:", error) // Print the error if one occurred
     }
@@ -86,29 +89,17 @@ class WordpressArticle {
 
   private async get_categories(): Promise<IWordpressCategory[]> {
     log.debug("Let's get wordpress categories")
-    let response
-    try {
-      response = await request.get({
-        url: `${process.env.WP_URL}/wp-json/wp/v2/categories?per_page=100`,
-        auth: {
-          user: process.env.WP_USERNAME,
-          password: process.env.WP_PASSWORD,
-        },
-      })
-    } catch (error) {
-      log.error(error) // Print the error if one occurred
-    }
-
+    const response = await this.get("categories?per_page=100")
+    log.debug("Categories before convert:", util.inspect(response, { colors: true }))
     const categories = yaml.safeLoad(response)
-    // console.log(util.inspect(categories, { colors:true }))
+    log.debug("Categories:", util.inspect(categories, { colors: true }))
     return categories
   }
-
-  private async get_tags(): Promise<IWordpressTag[]> {
+  private async get(lastPartOfUrl: string) {
     let response
     try {
       response = await request.get({
-        url: `${process.env.WP_URL}/wp-json/wp/v2/tags?per_page=100`,
+        url: `${process.env.WP_URL}/wp-json/wp/v2/${lastPartOfUrl}`,
         auth: {
           user: process.env.WP_USERNAME,
           password: process.env.WP_PASSWORD,
@@ -117,29 +108,22 @@ class WordpressArticle {
     } catch (error) {
       log.error("error:", error) // Print the error if one occurred
     }
+    return response
+  }
+  private async get_tags(): Promise<IWordpressTag[]> {
+    let response
+    response = await this.get("tags?per_page=100")
     const tags1 = yaml.safeLoad(response)
-
-    try {
-      response = await request.get({
-        url: `${process.env.WP_URL}/wp-json/wp/v2/tags?per_page=100&page=2`,
-        auth: {
-          user: process.env.WP_USERNAME,
-          password: process.env.WP_PASSWORD,
-        },
-      })
-    } catch (error) {
-      log.error("error:", error) // Print the error if one occurred
-    }
+    response = await this.get("tags?per_page=100&page=2")
     const tags2 = yaml.safeLoad(response)
 
     return _.union(tags1, tags2)
   }
-
   private async article_categories(): Promise<number[]> {
     if (this.hugoArticle.yaml.categories && this.hugoArticle.yaml.categories.length > 0) {
-      log.trace("continuing")
+      log.debug("continuing")
     } else {
-      log.trace("returning empty")
+      log.debug("returning empty")
       return []
     }
 
@@ -170,19 +154,7 @@ class WordpressArticle {
         log.warn("Tag found: ", tag, hit)
         return hit.id
       } else {
-        let response
-        try {
-          response = await request.get({
-            url: `${process.env.WP_URL}/wp-json/wp/v2/tags?search=` + tag,
-            auth: {
-              user: process.env.WP_USERNAME,
-              password: process.env.WP_PASSWORD,
-            },
-            json: true,
-          })
-        } catch (error) {
-          log.error("error:", error) // Print the error if one occurred
-        }
+        const response = this.get(`tags?search=` + tag)
         let hit2
         if (response && response.length > 1 && response[0].name === tag) {
           hit2 = response[0]
@@ -190,7 +162,7 @@ class WordpressArticle {
           log.error(`${tag} not found, creating...`, response)
           hit2 = await this.create_tag(tag)
         }
-        log.trace(hit2.id)
+        log.debug(hit2.id)
         return hit2.id
       }
     })
@@ -205,11 +177,11 @@ class WordpressArticle {
       log.debug(`SEARCHING for ${taxonomy}: `, term)
       let hit = _.find(this.allCategories, { name: term })
       if (!hit) {
-        log.trace(this.allCategories)
+        log.debug(this.allCategories)
         log.error(`${term} not found, creating...`)
         hit = await this.create_category(term)
       }
-      log.trace(hit.id)
+      log.debug(hit.id)
       return hit.id
     })
     const customCategories = await Promise.all(promises)
