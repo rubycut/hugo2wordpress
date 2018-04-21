@@ -12,9 +12,9 @@ import WordpressArticle from "./src/wordpressArticle"
 
 import program from "commander"
 
-const log = logger()
-log.setLevel("debug")
 dotenv.config()
+
+const log = logger()
 
 program
   .option("-d, --debug", "debug mode")
@@ -30,3 +30,5 @@ program
     }
   })
   .parse(process.argv)
+
+console.log("all done")
