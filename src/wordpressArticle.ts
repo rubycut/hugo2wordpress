@@ -8,6 +8,8 @@ import HugoArticle from "./hugoArticle"
 
 dotenv.config()
 
+declare var log: any
+
 interface IWordpressArticleOption {
   hugoArticle: HugoArticle
   live?: boolean
@@ -43,8 +45,8 @@ class WordpressArticle {
     if (this.hugoArticle.yaml.tags && this.hugoArticle.yaml.tags.length > 0) {
       this.tags = await this.article_tags()
     }
-    log.debug("CHECK THIS", process.env.HUGO_CUSTOM_TAXONOMIES)
-    const promises = _.get(process.env, "HUGO_CUSTOM_TAXONOMIES", "")
+    log.debug("CHECK THIS: ", process.env.HUGO_CUSTOM_TAXONOMIES)
+    const promises = (_.get(process.env, "HUGO_CUSTOM_TAXONOMIES", "") as any)
       .split(",")
       .map(async (taxonomy) => {
         log.debug("Checking custom taxonomy:", taxonomy)
@@ -156,7 +158,7 @@ class WordpressArticle {
       } else {
         const response = this.get(`tags?search=` + tag)
         let hit2
-        if (response && response.length > 1 && response[0].name === tag) {
+        if (response && (response as any).length > 1 && response[0].name === tag) {
           hit2 = response[0]
         } else {
           log.error(`${tag} not found, creating...`, response)

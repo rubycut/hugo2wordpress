@@ -14,16 +14,19 @@ import program from "commander"
 
 dotenv.config()
 
-global.log = logger()
+declare var log: any
+const globalAny: any = global
+
+globalAny.log = logger()
 
 program
   .option("-d, --debug", "debug mode")
   .command("convert <article>", "convert article from hugo, and add it as draft to wordpress")
   .option("-l, --live", "Actually push to wordpress")
-  .action(function(cmd, options) {
+  .action((cmd, options) => {
     if (program.debug) {
-      console.log("Turning on debug mode.")
       log.setLevel("debug")
+      log.debug("Turning on debug mode.")
     }
     try {
       const hugoArticle = new HugoArticle({ filename: cmd })

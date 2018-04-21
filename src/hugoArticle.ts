@@ -7,7 +7,7 @@ import request from "request-promise-native"
 import util from "util"
 
 dotenv.config()
-
+declare var log: any
 interface IHugoArticleOptions {
   filename: string
 }
